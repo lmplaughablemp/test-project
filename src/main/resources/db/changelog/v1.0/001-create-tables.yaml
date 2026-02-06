@@ -1,0 +1,219 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-users-table
+      author: developer
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: varchar(50)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(100)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enabled
+                  type: boolean
+                  defaultValueBoolean: true
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: last_login
+                  type: timestamp
+                  constraints:
+                    nullable: true
+
+  - changeSet:
+      id: 002-create-user-roles-table
+      author: developer
+      changes:
+        - createTable:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+            constraints:
+              primaryKey:
+                columnNames: user_id, role
+                constraintName: pk_user_roles
+        - addForeignKeyConstraint:
+            baseTableName: user_roles
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_user_roles_user
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 003-create-cards-table
+      author: developer
+      changes:
+        - createTable:
+            tableName: cards
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: card_number_encrypted
+                  type: varchar(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: card_number_masked
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: holder_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expiry_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: balance
+                  type: decimal(15,2)
+                  defaultValueNumeric: 0.00
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: cards
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_cards_user
+            onDelete: CASCADE
+        - createIndex:
+            indexName: idx_cards_user_id
+            tableName: cards
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            indexName: idx_cards_status
+            tableName: cards
+            columns:
+              - column:
+                  name: status
+
+  - changeSet:
+      id: 004-create-transfers-table
+      author: developer
+      changes:
+        - createTable:
+            tableName: transfers
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: from_card_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: to_card_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: decimal(15,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(500)
+              - column:
+                  name: status
+                  type: varchar(20)
+                  defaultValue: 'COMPLETED'
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: transfers
+            baseColumnNames: from_card_id
+            referencedTableName: cards
+            referencedColumnNames: id
+            constraintName: fk_transfers_from_card
+        - addForeignKeyConstraint:
+            baseTableName: transfers
+            baseColumnNames: to_card_id
+            referencedTableName: cards
+            referencedColumnNames: id
+            constraintName: fk_transfers_to_card
+        - createIndex:
+            indexName: idx_transfers_from_card
+            tableName: transfers
+            columns:
+              - column:
+                  name: from_card_id
+        - createIndex:
+            indexName: idx_transfers_to_card
+            tableName: transfers
+            columns:
+              - column:
+                  name: to_card_id
